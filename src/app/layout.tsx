@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { AuthProvider } from "@/context/AuthProvider";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import Header from "@/components/Header";
+import ModalProvider from "@/context/ModalProvider";
+import Modal from "@/components/ui/Modal";
+import WeatherDataProvider from "@/context/WeatherProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +22,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <AuthProvider>
+          <WeatherDataProvider>
+            <ModalProvider>
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Modal />
+              <Toaster />
+            </ModalProvider>
+          </WeatherDataProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
