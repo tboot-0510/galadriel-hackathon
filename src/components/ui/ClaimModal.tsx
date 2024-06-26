@@ -11,6 +11,9 @@ import "react-calendar/dist/Calendar.css";
 import "./claimModal.css";
 import { convertToISODate, formatDate, formatDateTime } from "@/utils/date";
 import { useWeatherData } from "@/context/WeatherProvider";
+import { getAgentRunId, getNewMessages } from "@/lib/web3/agent";
+import { createClaim } from "@/actions/claims/createClaim";
+import { useAuth } from "@/context/AuthProvider";
 
 interface Message {
   role: string;
@@ -18,55 +21,6 @@ interface Message {
 }
 
 type ValuePiece = Date | null;
-
-const sendClaim = async (claimData: any) => {
-  const url = `/api/claims`;
-  let options = {
-    method: "POST",
-    headers: {
-      "Content-type": "application/json",
-    },
-    body: JSON.stringify(claimData),
-  };
-  return await fetch(url, options);
-};
-
-async function getNewMessages(
-  contract: Contract,
-  agentRunID: number,
-  currentMessagesCount: number
-): Promise<Message[]> {
-  const messages = await contract.getMessageHistoryContents(agentRunID);
-  const roles = await contract.getMessageHistoryRoles(agentRunID);
-
-  const newMessages: Message[] = [];
-  messages.forEach((message: any, i: number) => {
-    if (i >= currentMessagesCount) {
-      newMessages.push({
-        role: roles[i],
-        content: messages[i],
-      });
-    }
-  });
-  return newMessages;
-}
-
-function getAgentRunId(receipt: TransactionReceipt, contract: Contract) {
-  let agentRunID;
-  for (const log of receipt.logs) {
-    try {
-      const parsedLog = contract.interface.parseLog(log);
-      if (parsedLog && parsedLog.name === "AgentRunCreated") {
-        // Second event argument
-        agentRunID = ethers.toNumber(parsedLog.args[1]);
-      }
-    } catch (error) {
-      // This log might not have been from your contract, or it might be an anonymous log
-      console.log("Could not parse log:", log);
-    }
-  }
-  return agentRunID;
-}
 
 const ClaimModal = () => {
   const [claims, setClaims] = useState({
@@ -78,6 +32,8 @@ const ClaimModal = () => {
   const [explanation, setExplanation] = useState("");
   const { lastDay, weatherData } = useWeatherData();
   const [value, onChange] = useState<ValuePiece>(convertToISODate(lastDay));
+
+  const {account} = useAuth();
 
   const getWeatherOnDate = (date: ValuePiece) => {
     const idx = weatherData.labels.indexOf(formatDate(date));
@@ -208,15 +164,16 @@ const ClaimModal = () => {
     const claimData = {
       claims,
       explanation,
+      account
     };
     console.log("Claim Data:", claimData);
     try {
-      //   toast.promise(sendClaim(claimData), {
-      //     loading: "Saving...",
-      //     success: <b>Claimed send!</b>,
-      //     error: <b>Could not send.</b>,
-      //   });
-      await sendWeb3Claim();
+        toast.promise(createClaim(claimData), {
+          loading: "Saving...",
+          success: <b>Claimed send!</b>,
+          error: <b>Could not send.</b>
+        });
+      // await sendWeb3Claim();
     } catch (error) {
       console.log("error", error);
       toast.error("Error sending claim");

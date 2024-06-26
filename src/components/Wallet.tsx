@@ -22,7 +22,6 @@ export default function Wallet() {
   const connectWallet = async () => {
     try {
       const { ethereum } = window;
-      console.log("ethereum", ethereum);
       if (!ethereum) {
         alert("Get MetaMask -> https://metamask.io/");
         return;
@@ -42,7 +41,6 @@ export default function Wallet() {
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
-      console.log("ethereum", ethereum);
       if (!ethereum) {
         alert("Get MetaMask -> https://metamask.io/");
         return;
