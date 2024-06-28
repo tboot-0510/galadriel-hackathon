@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Claim" ALTER COLUMN "runId" DROP NOT NULL;

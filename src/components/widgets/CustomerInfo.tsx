@@ -2,8 +2,9 @@
 import CollapsibleRow from "@/components/CollapsibleRow";
 import CurrentWeather from "@/components/widgets/CurrentWeather";
 import { City, HourlyForecastDataInd, LandCoord } from "@/lib/types";
-import Button from "../Button";
+import Button from "../ui/Button";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthProvider";
 
 interface CustomerInfoProps {
   data: HourlyForecastDataInd;
@@ -16,15 +17,17 @@ export default function CustomerInfo({
   city,
   coordinates,
 }: CustomerInfoProps) {
+  const {account} = useAuth();
   return (
     <div className="customer-info">
       <CurrentWeather data={data} city={city} />
       <div className="flex flex-col w-full p-4">
         <Link
-          className="group rounded-md border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          className="group rounded-md border border-gray-300 px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
           rel="noopener noreferrer"
           href={{
             pathname: "/claims",
+            query: {account: account}
           }}
         >
           <h2 className="text-l font-semibold">
@@ -34,7 +37,7 @@ export default function CustomerInfo({
             </span>
           </h2>
         </Link>
-        <p className="mb-4">Your registered lands:</p>
+        <h2 className="my-4 text-l font-semibold">Your registered lands:</h2>
         {coordinates && (
           <div className="flex flex-col gap-2">
             {coordinates?.map((coord: LandCoord, idx: number) => {

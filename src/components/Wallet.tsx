@@ -1,5 +1,6 @@
 "use client";
 
+import { upsertUser } from "@/actions/user";
 import { useCallback, useEffect, useState } from "react";
 
 export interface AccountType {
@@ -31,7 +32,11 @@ export default function Wallet() {
         method: "eth_requestAccounts",
       });
       const chainId: string = await ethereum.request({ method: "eth_chainId" });
-      setAccount({ address: accounts[0].toLowerCase(), chainId: chainId });
+      const detectedAccount = accounts[0].toLowerCase();
+      if (detectedAccount) {
+        await upsertUser({account:detectedAccount});      
+      }
+      setAccount({ address: detectedAccount, chainId: chainId });
       ethereum.on("chainChanged", handleChainChanged);
     } catch (error) {
       console.log(error);
@@ -54,7 +59,12 @@ export default function Wallet() {
       if (chainId != GALADRIEL_CHAIN_ID) {
         await switchNetwork();
       }
-      setAccount({ address: accounts[0].toLowerCase(), chainId: chainId });
+      const detectedAccount = accounts[0].toLowerCase();
+      if (detectedAccount) {
+        await upsertUser({account:detectedAccount});      
+      }
+      
+      setAccount({ address: detectedAccount, chainId: chainId });
 
       ethereum.on("chainChanged", handleChainChanged);
     } catch (error) {

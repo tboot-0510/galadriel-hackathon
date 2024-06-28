@@ -6,55 +6,37 @@ import Wallet from "@/components/Wallet";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import { useAuth } from "@/context/AuthProvider";
-import { useRouter } from "next/router";
+import { addLandUser } from "@/actions/user";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import LeafletMap from "@/components/LeafletMap";
 
 const DEFAULT_COORD = [47.59053957096499, -122.32607449034236]
 
 export default function Home() {
-  const router = useRouter();
   const { account } = useAuth();
+  const router = useRouter();
   const [polygonCoordinates, setPolygonCoordinates] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const Map = useMemo(
     () =>
-      dynamic(() => import("@/components/Map"), {
+      dynamic(() => import("@/components/LeafletMap"), {
         loading: () => <p>A map is loading</p>,
         ssr: false,
       }),
     []
   );
 
-  const handleCreateUser = async () => {
-    setLoading(true);
+  const handleProceed = async () => {
+    if (!account) return;
     try {
-      const response = await fetch('/api/createUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address: account,
-          role: 'USER',           
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        // Redirect to dashboard with coordinates
-        router.push({
-          pathname: '/dashboard',
-          query: { coordinates: JSON.stringify(polygonCoordinates) },
-        });
-      } else {
-        console.error(data.error);
-      }
-    } catch (error) {
-      console.error('Failed to create user:', error);
-    } finally {
-      setLoading(false);
+      await addLandUser({account, land: polygonCoordinates});
+      router.push(`/dashboard?account=${account}`);
+    } catch (e){
+      console.log("e", e)
+      toast.error("Error accessing dashboard");
     }
-  };
+  }
 
   return (
     <main className="flex flex-col items-center p-24">
@@ -64,7 +46,7 @@ export default function Home() {
 
       <Card />
       <div className="bg-white-700 mx-auto my-5 w-full h-[580px]">
-        <Map
+        <LeafletMap
           position={DEFAULT_COORD}
           zoom={4.5}
           onPolygonCreated={setPolygonCoordinates}
@@ -91,13 +73,14 @@ export default function Home() {
               Save your land on chain
             </p>
           </Link> */}
-          <button
+          <button 
+            onClick={handleProceed}
             className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-            onClick={handleCreateUser}
-            disabled={loading}
+            style={{backgroundColor: "transparent", color:"black"}}
+            rel="noopener noreferrer"
           >
             <h2 className="mb-3 text-2xl font-semibold">
-              Proceed{' '}
+              Proceed{" "}
               <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
                 -&gt;
               </span>

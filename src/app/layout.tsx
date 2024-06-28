@@ -5,7 +5,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Header from "@/components/Header";
 import ModalProvider from "@/context/ModalProvider";
-import Modal from "@/components/ui/Modal";
+import Modal from "@/components/modal/Modal";
 import WeatherDataProvider from "@/context/WeatherProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -27,7 +27,7 @@ export default function RootLayout({
           <WeatherDataProvider>
             <ModalProvider>
               <Header />
-              <main className="flex-grow">{children}</main>
+              <main className="flex-grow h-full">{children}</main>
               <Modal />
               <Toaster />
             </ModalProvider>

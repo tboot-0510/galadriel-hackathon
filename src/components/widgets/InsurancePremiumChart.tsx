@@ -1,5 +1,5 @@
 "use client";
-import Button from "../Button";
+import Button from "../ui/Button";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
 import { formatDate } from "@/utils/date";
 import { useWeatherData } from "@/context/WeatherProvider";
 import { useEffect } from "react";
+import { estimatePremium } from "@/lib/premiums";
 
 ChartJS.register(
   CategoryScale,
@@ -27,14 +28,14 @@ ChartJS.register(
 
 const getLastDay = (labels: any, scope: any) => {
   const reversedArray = scope.data.slice().reverse();
-  const lastIndex = reversedArray.findIndex(
-    (element: any) => !Number.isNaN(element)
+  const firstNonNullIdx = reversedArray.findIndex(
+    (element: any) => element !== null
   );
-  if (lastIndex === -1) {
+  if (firstNonNullIdx === -1) {
     return labels[labels.length - 1];
   }
 
-  return labels[scope.data.length - 1 - lastIndex];
+  return labels[scope.data.length - 1 - firstNonNullIdx];
 };
 
 export default function InsurancePremiumChart({ data }: any) {
@@ -63,7 +64,7 @@ export default function InsurancePremiumChart({ data }: any) {
         yAxisID: "y3",
       },
       {
-        label: "Soil temp (km/h)",
+        label: "Soil temp (°C)",
         data: Object.values(data.hourly.soilTemperature7To28cm),
         borderColor: "rgb(75, 192, 192)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -104,7 +105,14 @@ export default function InsurancePremiumChart({ data }: any) {
         },
       },
     },
+    elements:{
+      point: {
+        pointStyle: "false"
+      }
+    }
   };
+
+  console.log("estimate", estimatePremium(chartData.datasets))
 
   const { weatherData, setWeatherData, setLastDayData } = useWeatherData();
 
@@ -117,7 +125,8 @@ export default function InsurancePremiumChart({ data }: any) {
 
   return (
     <div className="insurance-premium-chart">
-      <Line data={chartData} options={options} />
+      {"Hallo"}
+      {/* <Line data={chartData} options={options} /> */}
     </div>
   );
 }

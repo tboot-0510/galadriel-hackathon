@@ -176,4 +176,9 @@ export const weatherIconMappings: Record<string, string> = {
   "904n": "hot",
   "906n": "night-alt-hail",
   "957n": "strong-wind",
+  "convective/outlook": "horizon",
+  "phrases/summary": "barometer",
+  "fires/outlook": "fire",
+  "lightning/threats": "lightning",
+  "stormcells/summary": "storm-showers",
 };

@@ -7,13 +7,16 @@ import { ABI } from "@/abis/agent";
 import DatePicker from "react-date-picker";
 import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
-
-import "./claimModal.css";
 import { convertToISODate, formatDate, formatDateTime } from "@/utils/date";
 import { useWeatherData } from "@/context/WeatherProvider";
 import { getAgentRunId, getNewMessages } from "@/lib/web3/agent";
-import { createClaim } from "@/actions/claims/createClaim";
+import { createClaim } from "@/actions/claims";
 import { useAuth } from "@/context/AuthProvider";
+import { useRouter } from "next/navigation";
+import { useModalContext } from "@/context/ModalProvider";
+
+
+import "./claimModal.css";
 
 interface Message {
   role: string;
@@ -22,7 +25,7 @@ interface Message {
 
 type ValuePiece = Date | null;
 
-const ClaimModal = () => {
+const PremiumModal = () => {
   const [claims, setClaims] = useState({
     cropDamage: false,
     fire: false,
@@ -30,14 +33,19 @@ const ClaimModal = () => {
     disease: false,
   });
   const [explanation, setExplanation] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { lastDay, weatherData } = useWeatherData();
   const [value, onChange] = useState<ValuePiece>(convertToISODate(lastDay));
 
+  
+  const router = useRouter();
+
   const {account} = useAuth();
+  const {closeModal} = useModalContext();
 
   const getWeatherOnDate = (date: ValuePiece) => {
     const idx = weatherData.labels.indexOf(formatDate(date));
-    console.log("idx", idx);
     const data = weatherData.datasets.reduce((acc, curr) => {
       acc.push({
         label: curr.label,
@@ -61,7 +69,6 @@ const ClaimModal = () => {
     try {
       const ethersProvider = new BrowserProvider(window.ethereum);
       const signer = await ethersProvider.getSigner();
-      console.log("signer", signer);
       const contract = new Contract(
         process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "",
         ABI,
@@ -74,85 +81,8 @@ const ClaimModal = () => {
         )}, determine if there is a chance that fire occured due to natural circonstances (excluding artificial fire) around Paris on ${value}. Conclude by saying : Possible/Impossible/Need verification`,
         10
       );
-      console.log("transactionResponse", transactionResponse);
-      const receipt = await transactionResponse.wait();
-      console.log(`Task sent, tx hash: ${receipt.hash}`);
-      let agentRunID = getAgentRunId(receipt, contract);
-      console.log(`Created agent run ID: ${agentRunID}`);
-      //   if (!agentRunID && agentRunID !== 0) {
-      //     return;
-      //   }
-
-      let allMessages: Message[] = [];
-      // Run the chat loop: read messages and send messages
-      var exitNextLoop = false;
-      while (true) {
-        const newMessages: Message[] = await getNewMessages(
-          contract,
-          agentRunID,
-          allMessages.length
-        );
-        if (newMessages) {
-          for (let message of newMessages) {
-            let roleDisplay = message.role === "assistant" ? "THOUGHT" : "STEP";
-            let color = message.role === "assistant" ? "\x1b[36m" : "\x1b[33m"; // Cyan for thought, yellow for step
-            console.log(`${color}${roleDisplay}\x1b[0m: ${message.content}`);
-            allMessages.push(message);
-          }
-        }
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        if (exitNextLoop) {
-          console.log(`agent run ID ${agentRunID} finished!`);
-          break;
-        }
-        if (await contract.isRunFinished(agentRunID)) {
-          exitNextLoop = true;
-        }
-      }
-      //   if (receipt && receipt.status) {
-      //     conversation.current = [
-      //       ...message,
-      //       {
-      //         content: input,
-      //         role: "user",
-      //         transactionHash: receipt.hash,
-      //       },
-      //     ];
-
-      //     if (chatId) {
-      //       if (currentChatRef?.current) {
-      //         // TODO: does this work?
-      //         currentChatRef.current.chatId = chatId;
-      //       }
-
-      //       while (true) {
-      //         const newMessages: ChatMessage[] = await getNewMessages(
-      //           contract,
-      //           chatId,
-      //           conversation.current.length
-      //         );
-      //         if (newMessages) {
-      //           const lastMessage = newMessages.at(-1);
-      //           if (lastMessage) {
-      //             if (lastMessage.role == "assistant") {
-      //               conversation.current = [
-      //                 ...conversation.current,
-      //                 { content: lastMessage.content, role: "assistant" },
-      //               ];
-      //               break;
-      //             } else {
-      //               // Simple solution to show function results, not ideal
-      //               conversation.current = [
-      //                 ...conversation.current,
-      //                 { content: lastMessage.content, role: "user" },
-      //               ];
-      //             }
-      //           }
-      //         }
-      //         await new Promise((resolve) => setTimeout(resolve, 2000));
-      //       }
-      //     }
-      //   }
+      return transactionResponse.hash;
+      
     } catch (error: any) {
       console.error(error);
       toast.error(error.message);
@@ -161,28 +91,31 @@ const ClaimModal = () => {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    const claimData = {
-      claims,
-      explanation,
-      account
-    };
-    console.log("Claim Data:", claimData);
+    setLoading(true);
     try {
-        toast.promise(createClaim(claimData), {
+        const tx = await sendWeb3Claim();
+        const claimResp = await toast.promise(createClaim({
+          claims,
+          explanation,
+          account,
+          tx
+        }), {
           loading: "Saving...",
           success: <b>Claimed send!</b>,
           error: <b>Could not send.</b>
         });
-      // await sendWeb3Claim();
+        closeModal();
+        router.push(`/claims?id=${claimResp.claimId}&account=${account}`);
     } catch (error) {
       console.log("error", error);
       toast.error("Error sending claim");
-    }
+      setLoading(false)
+    } 
   };
 
   return (
     <div className="claim-form">
-      <h1>Insurance Claim Form</h1>
+      <h1>Premium Payment Overview</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="mb-3">Claims:</label>
@@ -249,4 +182,4 @@ const ClaimModal = () => {
   );
 };
 
-export default ClaimModal;
+export default PremiumModal;

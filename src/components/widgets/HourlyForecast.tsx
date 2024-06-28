@@ -17,8 +17,8 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
 
   return (
     <div
-      className="col-span-2 flex h-48 cursor-grab touch-auto touch-pan-x select-none scroll-px-0.5 flex-row items-center justify-between gap-12 overflow-hidden overscroll-contain scroll-smooth p-6 ring-offset-background transition-colors scrollbar-hide hover:overflow-x-auto focus:scroll-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      style={{ border: "1px solid white", borderRadius: "25px", backgroundColor: "white" }}
+      className="col-span-2 flex cursor-grab touch-auto touch-pan-x select-none scroll-px-0.5 flex-row items-center justify-between gap-12 overflow-hidden overscroll-contain scroll-smooth p-6 ring-offset-background transition-colors scrollbar-hide hover:overflow-x-auto focus:scroll-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      style={{ height: "10rem", border: "1px solid white", borderRadius: "25px", backgroundColor: "white" }}
     >
       {data.slice(0, 12).map((item: HourlyForecastData, i: number) => (
         <div key={item.dt} className="flex h-full flex-col justify-between">

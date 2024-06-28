@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24
 
-import "@chainlink/contracts/src/v0.8/KeeperCompatible.sol";
-
 import "./interfaces/IOracle.sol";
 import "./Agent.sol";
 
@@ -20,28 +18,19 @@ import "./Agent.sol";
 // decides if user is correct, incorrect (no extreme weather reported - ignore claim and increase premium) or need human intervention (lack of proof - fire/flooding/damage)
 
 
-contract InsuranceRegistry is Agent, KeeperCompatibleInterface {
-
-    struct Coordinates {
-        int256 lat;
-        int256 lng;
-    }
-
-    struct Polygon {
-        Coordinate[] coordinates;
-    }
+contract InsuranceDeposit is Agent {
 
     mapping(address => uint256) public premiumBalances;
-    mapping(address => mapping(uint256 => Polygon)) public landCoordinates;
-    mapping(address => uint256) internal registeredLands;
-
-    event LandRegistered(address landOwner);
+    mapping(address => string) public indexCid;
+    
+    event PremiumDeposited(address indexed payer, uint256 month, uint256 amount);
     event PaymentSent(address indexed user, uint256 amount);
-    uint256 public paymentInterval = 1 days;
 
-    constant immutable uint8 MAX_ITERATIONS = 20;
+    uint256 public paymentInterval = 1 weeks;
 
-    error AlreadyRegisteredLand(address);
+    constant immutable uint8 MAX_ITERATIONS = 10;
+
+    error AlreadyDeposited(address, uint256);
 
     modifier onlyOracle() {
         require(msg.sender == oracleAddress, "Caller is not oracle");
@@ -49,19 +38,6 @@ contract InsuranceRegistry is Agent, KeeperCompatibleInterface {
     }
 
     constructor(address initialOracleAddress, string memory systemPrompt) Agent(initialOracleAddress, systemPrompt) {}
-
-    function registerLand(Polygon[] memory _polygons) public {
-        require(registeredLands(msg.sender) == 0, AlreadyRegisteredLand(msg.sender));
-        
-        uint256 length = _polygons.length;
-        require(length < 10, "Too many data points");
-
-        for (uint256 i = 0; i < length; i++) {
-            landCoordinates[msg.sender][i] = _polygons[i];
-            registeredLands[msg.sender]++;
-        }
-        emit LandRegistered(msg.sender, polygonId);
-    }
 
     function claim(string memory message) public returns (uint i) {
         runAgent(message, MAX_ITERATIONS)
@@ -77,6 +53,8 @@ contract InsuranceRegistry is Agent, KeeperCompatibleInterface {
 
     }
 
-    receive() external payable {}
+    function depositPremium() {
+        
+    }
 }
 

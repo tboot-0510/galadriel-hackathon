@@ -31,6 +31,7 @@ function getMonthNumber(monthName: string) {
 }
 
 export function convertToISODate(dateString: string) {
+  if (!dateString) return new Date();
   const [day, month, year] = dateString.split(" ");
 
   const isoDate = new Date(

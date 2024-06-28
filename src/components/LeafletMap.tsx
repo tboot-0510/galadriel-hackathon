@@ -16,7 +16,7 @@ import { EditControl } from "react-leaflet-draw";
 import "leaflet-draw";
 import { useEffect, useRef, useState } from "react";
 
-export default function Map(props: any) {
+export default function LeafletMap(props: any) {
   const { position, zoom, onPolygonCreated } = props;
   const editableFGRef = useRef();
 
@@ -30,16 +30,6 @@ export default function Map(props: any) {
     }));
 
     const drawnItems = editableFGRef.current._layers;
-    console.log("drawnItems", drawnItems);
-    // if (Object.keys(drawnItems).length > 1) {
-    //   Object.keys(drawnItems).forEach((layerid, index) => {
-    //     if (index > 0) return;
-    //     const layer = drawnItems[layerid];
-    //     console.log("remove lqyer", layer, layerid);
-    //     editableFGRef.current.removeLayer(layer);
-    //   });
-    //   console.log("drawnItems", drawnItems);
-    // }
   };
 
   return (

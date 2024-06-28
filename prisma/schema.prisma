@@ -19,16 +19,19 @@ enum Role {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  role         Role
-  address      String
-  claims       Claim[]
-  knowledgeCID String
+  id              Int     @id @default(autoincrement())
+  role            Role
+  address         String  @unique
+  claims          Claim[]
+  knowledgeCID    String?
+  landCoordinates Json?
 }
 
 model Claim {
-  id          Int    @id @default(autoincrement())
-  userId      Int
-  user        User   @relation(fields: [userId], references: [id])
-  description String
+  id              Int    @id @default(autoincrement())
+  userId          Int
+  user            User   @relation(fields: [userId], references: [id])
+  description     String
+  transactionHash String
+  runId           Int?
 }
