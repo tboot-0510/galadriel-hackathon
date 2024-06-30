@@ -118,8 +118,6 @@ export default function Wallet() {
     checkIfWalletIsConnected();
   }, []);
 
-  console.log(account);
-
   function getButtonText() {
     if (account?.address) {
       return account?.address;

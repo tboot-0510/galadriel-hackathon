@@ -15,7 +15,7 @@ import ReactMapGL, { Layer, LayerProps, NavigationControl, Source } from "react-
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
 const OPENWEATHERMAP_TOKEN = process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY
 
-export default function Map({lat, lon}:{lat:number, lon:number}) {
+export default function Map({lat, lon}:{lat:number | string, lon:number | string}) {
 
   const weatherTiles = useMemo(() => {
     return [

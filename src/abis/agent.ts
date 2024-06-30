@@ -1,307 +1,408 @@
 export const ABI = [
   {
+    type: "constructor",
     inputs: [
       {
-        internalType: "address",
         name: "initialOracleAddress",
         type: "address",
+        internalType: "address",
       },
-      {
-        internalType: "string",
-        name: "systemPrompt",
-        type: "string",
-      },
+      { name: "systemPrompt", type: "string", internalType: "string" },
     ],
     stateMutability: "nonpayable",
-    type: "constructor",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "runId",
-        type: "uint256",
-      },
-    ],
-    name: "AgentRunCreated",
-    type: "event",
+    type: "function",
+    name: "DEDUCTIBLE_MULTIPLIER",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOracleAddress",
-        type: "address",
-      },
-    ],
-    name: "OracleAddressUpdated",
-    type: "event",
+    type: "function",
+    name: "MAX_ITERATIONS",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
+    stateMutability: "view",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
+    type: "function",
+    name: "PREMIUM_PENALTY",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "agentRuns",
+    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     outputs: [
+      { name: "owner", type: "address", internalType: "address" },
       {
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
         name: "responsesCount",
         type: "uint256",
+        internalType: "uint256",
       },
-      {
-        internalType: "uint8",
-        name: "max_iterations",
-        type: "uint8",
-      },
-      {
-        internalType: "bool",
-        name: "is_finished",
-        type: "bool",
-      },
+      { name: "max_iterations", type: "uint8", internalType: "uint8" },
+      { name: "is_finished", type: "bool", internalType: "bool" },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "agentId",
-        type: "uint256",
-      },
-    ],
-    name: "getMessageHistoryContents",
-    outputs: [
-      {
-        internalType: "string[]",
-        name: "",
-        type: "string[]",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "agentId",
-        type: "uint256",
-      },
-    ],
-    name: "getMessageHistoryRoles",
-    outputs: [
-      {
-        internalType: "string[]",
-        name: "",
-        type: "string[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "runId",
-        type: "uint256",
-      },
-    ],
-    name: "isRunFinished",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "runId",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "response",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "errorMessage",
-        type: "string",
-      },
-    ],
-    name: "onOracleFunctionResponse",
+    name: "claim",
+    inputs: [{ name: "message", type: "string", internalType: "string" }],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "depositPremium",
+    inputs: [],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "findClaimConclusion",
+    inputs: [{ name: "input", type: "string", internalType: "string" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "pure",
+  },
+  {
+    type: "function",
+    name: "forecastPremium",
     inputs: [
+      { name: "message", type: "string", internalType: "string" },
+      { name: "newPrompt", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getMessageHistoryContents",
+    inputs: [{ name: "agentId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "string[]", internalType: "string[]" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getMessageHistoryRoles",
+    inputs: [{ name: "agentId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "string[]", internalType: "string[]" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "indexCid",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "insuredAmount",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isRunFinished",
+    inputs: [{ name: "runId", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "onOracleFunctionResponse",
+    inputs: [
+      { name: "runId", type: "uint256", internalType: "uint256" },
+      { name: "response", type: "string", internalType: "string" },
+      { name: "errorMessage", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "onOracleOpenAiLlmResponse",
+    inputs: [
+      { name: "runId", type: "uint256", internalType: "uint256" },
       {
-        internalType: "uint256",
-        name: "runId",
-        type: "uint256",
-      },
-      {
-        components: [
-          {
-            internalType: "string",
-            name: "id",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "content",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "functionName",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "functionArguments",
-            type: "string",
-          },
-          {
-            internalType: "uint64",
-            name: "created",
-            type: "uint64",
-          },
-          {
-            internalType: "string",
-            name: "model",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "systemFingerprint",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "object",
-            type: "string",
-          },
-          {
-            internalType: "uint32",
-            name: "completionTokens",
-            type: "uint32",
-          },
-          {
-            internalType: "uint32",
-            name: "promptTokens",
-            type: "uint32",
-          },
-          {
-            internalType: "uint32",
-            name: "totalTokens",
-            type: "uint32",
-          },
-        ],
-        internalType: "struct IOracle.OpenAiResponse",
         name: "response",
         type: "tuple",
+        internalType: "struct IOracle.OpenAiResponse",
+        components: [
+          { name: "id", type: "string", internalType: "string" },
+          { name: "content", type: "string", internalType: "string" },
+          {
+            name: "functionName",
+            type: "string",
+            internalType: "string",
+          },
+          {
+            name: "functionArguments",
+            type: "string",
+            internalType: "string",
+          },
+          { name: "created", type: "uint64", internalType: "uint64" },
+          { name: "model", type: "string", internalType: "string" },
+          {
+            name: "systemFingerprint",
+            type: "string",
+            internalType: "string",
+          },
+          { name: "object", type: "string", internalType: "string" },
+          {
+            name: "completionTokens",
+            type: "uint32",
+            internalType: "uint32",
+          },
+          {
+            name: "promptTokens",
+            type: "uint32",
+            internalType: "uint32",
+          },
+          {
+            name: "totalTokens",
+            type: "uint32",
+            internalType: "uint32",
+          },
+        ],
       },
-      {
-        internalType: "string",
-        name: "errorMessage",
-        type: "string",
-      },
+      { name: "errorMessage", type: "string", internalType: "string" },
     ],
-    name: "onOracleOpenAiLlmResponse",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "oracleAddress",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "prompt",
-    outputs: [
-      {
-        internalType: "string",
-        name: "",
-        type: "string",
-      },
-    ],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "premiumBalances",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "premiumDeposits",
     inputs: [
-      {
-        internalType: "string",
-        name: "query",
-        type: "string",
-      },
-      {
-        internalType: "uint8",
-        name: "max_iterations",
-        type: "uint8",
-      },
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
     ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "prompt",
+    inputs: [],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "runAgent",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "i",
-        type: "uint256",
-      },
+    inputs: [
+      { name: "query", type: "string", internalType: "string" },
+      { name: "max_iterations", type: "uint8", internalType: "uint8" },
+      { name: "newPrompt", type: "string", internalType: "string" },
     ],
+    outputs: [{ name: "i", type: "uint256", internalType: "uint256" }],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "setOracleAddress",
     inputs: [
       {
-        internalType: "address",
         name: "newOracleAddress",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "setOracleAddress",
     outputs: [],
     stateMutability: "nonpayable",
+  },
+  {
     type: "function",
+    name: "storeInsuredAmount",
+    inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "event",
+    name: "AgentRunCreated",
+    inputs: [
+      {
+        name: "owner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "runId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DeductibleLocked",
+    inputs: [
+      {
+        name: "owner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "InsuredAmountSet",
+    inputs: [
+      {
+        name: "payer",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OracleAddressUpdated",
+    inputs: [
+      {
+        name: "newOracleAddress",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PaymentSent",
+    inputs: [
+      {
+        name: "user",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PenaltyAdded",
+    inputs: [
+      {
+        name: "owner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amout",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PremiumDeposited",
+    inputs: [
+      {
+        name: "payer",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "day",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "month",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "year",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "error",
+    name: "AlreadyDeposited",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+  },
+  {
+    type: "error",
+    name: "AlreadySetInsuredAmount",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+  },
+  {
+    type: "error",
+    name: "MissingInsuredAmount",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
   },
 ];

@@ -44,6 +44,10 @@ export async function GET(request: Request) {
     where: {
       address: account,
     },
+    include: {
+      premiums: true,
+      claims: true,
+    },
   });
 
   if (!user) {

@@ -1,30 +1,14 @@
 "use client";
-import Button from "../ui/Button";
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { formatDate } from "@/utils/date";
+import { convertToISODate, formatDate, formatDateTime, getDaysInMonth, getOneDayAfter, getOneDayBefore, getUnixTimestamp, getUnixTimestampDayBefore } from "@/utils/date";
 import { useWeatherData } from "@/context/WeatherProvider";
-import { useEffect } from "react";
-import { estimatePremium } from "@/lib/premiums";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthProvider";
+import { Contract } from "ethers";
+import { getAgentRunId, getContract, getNewMessages } from "@/lib/web3/agent";
+import { useRouter } from "next/navigation";
+import { BrowserProvider } from "ethers";
+import { getAgentId, getTxMessages } from "@/actions/web3";
+import { Loading } from "../ui/Loading";
 
 const getLastDay = (labels: any, scope: any) => {
   const reversedArray = scope.data.slice().reverse();
@@ -38,95 +22,134 @@ const getLastDay = (labels: any, scope: any) => {
   return labels[scope.data.length - 1 - firstNonNullIdx];
 };
 
-export default function InsurancePremiumChart({ data }: any) {
-  const chartData = {
-    labels: data.daily.time.map(formatDate),
-    datasets: [
-      {
-        label: "Temperature (°C)",
-        data: Object.values(data.daily.temperature2mMax),
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        yAxisID: "y1",
-      },
-      {
-        label: "Precipitation (mm)",
-        data: Object.values(data.daily.rainSum),
-        borderColor: "rgb(54, 162, 235)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        yAxisID: "y2",
-      },
-      {
-        label: "Wind Speed (km/h)",
-        data: Object.values(data.daily.windSpeed10mMax),
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        yAxisID: "y3",
-      },
-      {
-        label: "Soil temp (°C)",
-        data: Object.values(data.hourly.soilTemperature7To28cm),
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        yAxisID: "y4",
-      },
-    ],
-  };
+const getPercentageChange = (oldValue:number, newValue:number) => {
+  const change = newValue - oldValue;
+  const percentageChange = (change / oldValue) * 100;
+  return percentageChange;
+}
 
-  const options = {
-    scales: {
-      y1: {
-        type: "linear",
-        display: true,
-        position: "left",
-      },
-      y2: {
-        type: "linear",
-        display: true,
-        position: "right",
-        grid: {
-          drawOnChartArea: false,
-        },
-      },
-      y3: {
-        type: "linear",
-        display: false,
-        position: "right",
-        grid: {
-          drawOnChartArea: false,
-        },
-      },
-      y4: {
-        type: "linear",
-        display: false,
-        position: "right",
-        grid: {
-          drawOnChartArea: false,
-        },
-      },
-    },
-    elements:{
-      point: {
-        pointStyle: "false"
-      }
-    }
-  };
+const getText = (prevDay:number, newValue:number) => {
+  const up = prevDay < newValue;
+  const dayMovement = up ? "📈" : "📉";
+  const dayPctChange = getPercentageChange(prevDay, newValue).toFixed(2);
+  if (prevDay){
+    return `Premium price for ${formatDateTime(new Date(), true)} is ${dayMovement} by ${dayPctChange}%`
+  }
+  return `Premium price for ${formatDateTime(new Date(), true)}`
 
-  console.log("estimate", estimatePremium(chartData.datasets))
+}
 
+function extractQuoteValue(text:any) {
+  const quoteKey = '"quote":';
+  const startIndex = text.indexOf(quoteKey);
+  
+  if (startIndex === -1) return null; 
+
+  const quoteStartIndex = startIndex + quoteKey.length;
+  const quoteEndIndex = text.indexOf('}', quoteStartIndex);
+
+  if (quoteEndIndex === -1) return null;
+
+  const quoteValue = text.slice(quoteStartIndex, quoteEndIndex).trim();
+  
+  return parseFloat(quoteValue);
+}
+
+export default function InsurancePremiumChart({ tx, chartData, premiumInfo }: any) {
   const { weatherData, setWeatherData, setLastDayData } = useWeatherData();
+  const router = useRouter();
+
+  console.log("tx", tx)
+
+  const [loading, setLoading]= useState(false);
+  const [upcomingPremium, setUpcomingPremium] = useState("");
 
   useEffect(() => {
     if (!weatherData) {
       setWeatherData(chartData);
-      setLastDayData(getLastDay(chartData.labels, chartData.datasets[0]));
+      setLastDayData(convertToISODate(getLastDay(chartData.labels, chartData.datasets[0])));
     }
-  });
+  }, []);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let interval: any;
+    const pollTransactionReceipt = async () => {
+        const {ethereum} = window as any;
+        const ethersProvider = new BrowserProvider(ethereum);
+
+        const receipt = await ethersProvider.getTransactionReceipt(tx);
+        if (!receipt) {
+          timeoutId = setTimeout(pollTransactionReceipt, 2000);
+          return;
+        }
+        console.log("receipt", receipt);
+        return;
+        
+    };
+    if (tx){
+        setLoading(true);
+        pollTransactionReceipt();
+        interval = setInterval(() => {
+          getTxMessages(tx).then((resp) => {
+            if (!resp) return;
+            console.log("resp", resp);
+            if (resp?.status === "pending") return;
+            if (resp?.status === "finished") {
+              const {newMessages} = resp;
+              setLoading(false);
+
+              if (newMessages){
+                const {content} = newMessages[0];
+                const quote = extractQuoteValue(content);
+                setUpcomingPremium(quote);
+              }
+              clearInterval(interval);
+            }});
+            return;
+        }, 2000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (interval){
+        clearInterval(interval);
+      }
+      
+    };
+    
+  }, [tx]);
 
   return (
-    <div className="insurance-premium-chart">
-      {"Hallo"}
-      {/* <Line data={chartData} options={options} /> */}
+    <div className="flex flex-col border border-white rounded-[25px] bg-white text-black rounded-lg p-5">
+      <div className="text-black text-l font-semibold">
+        {getText(premiumInfo.prevDay, premiumInfo.daily)}
+      </div>
+      <div className="flex flex-row items-center justify-center gap-4 p-8">
+        <div className="flex flex-col items-center justify-center py-3 p-8">
+          <div className="text-3xl font-bold">{premiumInfo.prevDay || "-"}</div>
+          <div className="flex gap-2 dark:text-neutral-500">
+            {getOneDayBefore(new Date())}
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-3 p-8">
+          <div className="text-4xl font-bold">{premiumInfo.daily}</div>
+          <div className="flex gap-2 dark:text-neutral-500">
+            {formatDateTime(new Date())}
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-3 p-8">
+          <div className="text-3xl font-bold">
+            {loading && <Loading />}
+            {upcomingPremium}
+          </div>
+          <div className="gap-2 dark:text-neutral-500">
+            {getOneDayAfter(new Date())}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

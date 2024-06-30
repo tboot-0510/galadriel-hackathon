@@ -5,6 +5,7 @@ import { City, HourlyForecastDataInd, LandCoord } from "@/lib/types";
 import Button from "../ui/Button";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
+import { useEffect } from "react";
 
 interface CustomerInfoProps {
   data: HourlyForecastDataInd;
@@ -18,6 +19,7 @@ export default function CustomerInfo({
   coordinates,
 }: CustomerInfoProps) {
   const {account} = useAuth();
+
   return (
     <div className="customer-info">
       <CurrentWeather data={data} city={city} />

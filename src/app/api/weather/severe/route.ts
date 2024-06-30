@@ -3,33 +3,45 @@
 // /fires // real time
 // /droughts/monitor // https://data.api.xweather.com/droughts/monitor/contains?p=44.13495767829996, -103.22479304962965&filter=all
 
+import { formatFireOutlook } from "@/lib/formatters/severe/fire";
+import { formatConvectiveOutlook } from "@/lib/formatters/severe/outlook";
+import { formatStormCellSummary } from "@/lib/formatters/severe/storm";
+import { formatPhrasesSummary } from "@/lib/formatters/severe/summary";
+
 // /convective/outlook (time range +8 days) https://data.api.xweather.com/convective/outlook/contains?p=44.13495767829996,-103.22479304962965&filter=all&from=today&to=+7days&sort=day
 // /fires/outlook filter=all&from=today&to=+7days&sort=day&
 // /phrases/summary -> forecast (6hours) in language : "Expect light rain showers starting around 12 PM. Temperatures rising to 28 degrees this afternoon."
 // /lightning/threats // updated Every 2 minutes - time range +1 hour (10 times multiplier)
 // /stormcells/summary -> active stormcells (updated Every 2 - 3 Minutes) filter=threat
 
-const forecastEndpointsPrefix = [
-  "convective/outlook",
-  "fires/outlook",
-  "phrases/summary",
-  // "lightning/threats",
-  "stormcells/summary",
-];
-
-const keyToExtract = {
-  "convective/outlook": [],
-  "fires/outlook": [],
-  "phrases/summary": ["phrases.longMET"],
-  "lightning/threats": [],
-  "stormcells/summary": [],
+const options = {
+  "convective/outlook": "&filter=all&from=today&to=+7days&sort=day",
+  "fires/outlook": "&filter=all&from=today&to=+7days&sort=day&",
+  "phrases/summary": "",
+  "lightning/threats": "",
+  "stormcells/summary": "",
+  alerts: "&filter=outlook",
+  fires: "&filter=outlook",
+  threats: "",
+  "droughts/monitor": "&filter=all",
 };
 
-const dailyEndpointsPrefix = ["alerts", "threats", "fires", "droughts/monitor"];
-
 const actionEndpoints = {
-  forecast: forecastEndpointsPrefix,
-  current: dailyEndpointsPrefix,
+  forecast: [
+    "convective/outlook",
+    "fires/outlook",
+    "phrases/summary",
+    // "lightning/threats",
+    "stormcells/summary",
+  ],
+  current: ["alerts", "threats", "fires", "droughts/monitor"],
+};
+
+const getFormatFunc = {
+  "convective/outlook": formatConvectiveOutlook,
+  "fires/outlook": formatFireOutlook,
+  "phrases/summary": formatPhrasesSummary,
+  "stormcells/summary": formatStormCellSummary,
 };
 
 const fetchWeatherData = async ({
@@ -42,8 +54,9 @@ const fetchWeatherData = async ({
   lon: string;
 }) => {
   const RADIUS = "10:km";
+  const option = options[endpoint as string];
   const res = await fetch(
-    `https://data.api.xweather.com/${endpoint}/${lat},${lon}?client_secret=${process.env.XWEATHER_SECRET}&client_id=${process.env.XWEATHER_CLIENT}&radius=${RADIUS}`
+    `https://data.api.xweather.com/${endpoint}/${lat},${lon}?client_secret=${process.env.XWEATHER_SECRET}&client_id=${process.env.XWEATHER_CLIENT}&radius=${RADIUS}${option}`
   );
 
   if (!res.ok) {
@@ -87,18 +100,24 @@ export async function GET(request: Request) {
   const formattedResults = results.reduce((acc, curr) => {
     const { success, error, response } = curr.response;
     if (!success) {
-      acc.push({ endpoint: curr.endpoint, response: [] });
+      acc.push({ success, endpoint: curr.endpoint, response: [] });
       return acc;
     }
     if (error && error.code === "warn_no_data") {
-      acc.push({ endpoint: curr.endpoint, response: [] });
+      acc.push({ success, endpoint: curr.endpoint, response: [] });
       return acc;
     }
 
-    acc.push({ endpoint: curr.endpoint, response: response });
+    const formatterFunc = getFormatFunc[curr.endpoint];
+    const resp = formatterFunc(response);
+
+    acc.push({ success, endpoint: curr.endpoint, response: resp });
 
     return acc;
   }, []);
 
-  return Response.json(formattedResults);
+  return Response.json({
+    results: formattedResults,
+    fetchedAt: new Date().toISOString(),
+  });
 }

@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Galadriel Climate insurance application
+
+## Summary
+
+This service provides dynamic adjustments to insurance premiums based on real-time severe weather conditions. By integrating weather data from various sources, the service calculates and adjusts insurance premiums to reflect the current risk level for a specified location. The premium adjustments are executed on the blockchain for transparency and immutability.
+
+## Features
+
+- Real-Time Weather Data: Fetches up-to-date weather information to assess risk.
+- Dynamic Premium Calculation: Adjusts insurance premiums based on weather conditions.
+- Blockchain Integration: Executes premium adjustments on the blockchain for transparency.
+- Fraud proof climate claims: Executes and flags insurance fraud on the blockchain.
+
+![home](public/assets/page1.png)
+![dashboard](public/assets/page2.png)
+
+## Technologies
+
+- Galadriel Oracles/Blockchain
+- NextJs
+- React
+- Prisma
+- Postgres database
+- Docker
 
 ## Getting Started
 
 First, run the development server:
 
+- Node 20.14
+- Install Postgres
+
 ```bash
+yarn install
 yarn run dev
 
 npx prisma init
-
-npx prisma migrate dev --name add-claim
+npx prisma migrate dev --name init
+npx prisma generate
 
 docker compose up
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about the datasources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- [XWeather](https://www.xweather.com/docs/weather-api/endpoints/stormcells-summary) - External Weather API
+- [SPC Weather Service - Storm](https://www.spc.noaa.gov/products/outlook/) - have a look here to see various weather forecasts and select a location to test the product.
+- [SPC Weather Service - Fire](https://www.spc.noaa.gov/products/fire_wx/) - an interactive Next.js tutorial.

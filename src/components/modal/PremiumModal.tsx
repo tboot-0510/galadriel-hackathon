@@ -1,73 +1,34 @@
 "use client";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { BrowserProvider, Contract, ethers, TransactionReceipt } from "ethers";
+import { BrowserProvider, Contract, ethers } from "ethers";
 import { ABI } from "@/abis/agent";
 
-import DatePicker from "react-date-picker";
 import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
-import { convertToISODate, formatDate, formatDateTime } from "@/utils/date";
-import { useWeatherData } from "@/context/WeatherProvider";
-import { getAgentRunId, getNewMessages } from "@/lib/web3/agent";
-import { createClaim } from "@/actions/claims";
 import { useAuth } from "@/context/AuthProvider";
-import { useRouter } from "next/navigation";
 import { useModalContext } from "@/context/ModalProvider";
 
-
 import "./claimModal.css";
+import { createPremiumPayment } from "@/actions/user";
+import { Loading } from "../ui/Loading";
+import { formatDate, getUnixTimestamp } from "@/utils/date";
 
-interface Message {
-  role: string;
-  content: string;
-}
-
-type ValuePiece = Date | null;
-
-const PremiumModal = () => {
-  const [claims, setClaims] = useState({
-    cropDamage: false,
-    fire: false,
-    flooding: false,
-    disease: false,
-  });
-  const [explanation, setExplanation] = useState("");
+const PremiumModal = ({value}:{value:number}) => {
   const [loading, setLoading] = useState(false);
 
-  const { lastDay, weatherData } = useWeatherData();
-  const [value, onChange] = useState<ValuePiece>(convertToISODate(lastDay));
-
-  
-  const router = useRouter();
-
-  const {account} = useAuth();
+  const {user} = useAuth();
   const {closeModal} = useModalContext();
 
-  const getWeatherOnDate = (date: ValuePiece) => {
-    const idx = weatherData.labels.indexOf(formatDate(date));
-    const data = weatherData.datasets.reduce((acc, curr) => {
-      acc.push({
-        label: curr.label,
-        data: curr.data[idx],
-      });
-      return acc;
-    }, []);
+  const computedValue = (value:number) => {
+    const v = value * 0.001;
+    return ethers.parseEther(v.toString());
+  }
 
-    return data;
-  };
-
-  const handleCheckboxChange = (e: any) => {
-    const { name, checked } = e.target;
-    setClaims((prevClaims) => ({
-      ...prevClaims,
-      [name]: checked,
-    }));
-  };
-
-  const sendWeb3Claim = async () => {
+  const sendWeb3Tx = async () => {
     try {
-      const ethersProvider = new BrowserProvider(window.ethereum);
+      const {ethereum} = window as any;
+      const ethersProvider = new BrowserProvider(ethereum);
       const signer = await ethersProvider.getSigner();
       const contract = new Contract(
         process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "",
@@ -75,108 +36,60 @@ const PremiumModal = () => {
         signer
       );
 
-      const transactionResponse = await contract.runAgent(
-        `Based on provided weather data: ${JSON.stringify(
-          getWeatherOnDate(value)
-        )}, determine if there is a chance that fire occured due to natural circonstances (excluding artificial fire) around Paris on ${value}. Conclude by saying : Possible/Impossible/Need verification`,
-        10
-      );
+      const transactionResponse = await contract.depositPremium({value: computedValue(value)});
       return transactionResponse.hash;
       
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.message);
+      const errType = error.shortMessage === 'execution reverted (unknown custom error)'
+      if (errType) {
+        toast.error("Premium already deposited for today");
+        return;
+      }
+      toast.error(error);
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const handlePremiumPayment = async (e: any) => {
     e.preventDefault();
     setLoading(true);
     try {
-        const tx = await sendWeb3Claim();
-        const claimResp = await toast.promise(createClaim({
-          claims,
-          explanation,
-          account,
-          tx
-        }), {
-          loading: "Saving...",
-          success: <b>Claimed send!</b>,
-          error: <b>Could not send.</b>
-        });
+        sendWeb3Tx().then(async (tx) => {
+          if (!tx) return;
+          await toast.promise(createPremiumPayment({
+            userId: user?.id,
+            value: value,
+            tx,
+            date: getUnixTimestamp(new Date())
+          }), {
+            loading: "Saving...",
+            success: <b>Payment saved!</b>,
+            error: <b>Could not save.</b>
+          });
+        }).catch((e) => {
+          console.log("e", e);
+          toast.error("Error sending tx");
+        })
         closeModal();
-        router.push(`/claims?id=${claimResp.claimId}&account=${account}`);
     } catch (error) {
       console.log("error", error);
-      toast.error("Error sending claim");
+      toast.error("Error saving payment");
       setLoading(false)
     } 
   };
 
   return (
     <div className="claim-form">
-      <h1>Premium Payment Overview</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handlePremiumPayment}>
+        <p className="text-gray-500 text-sm mb-3">⚠️ For the demo, we set the arbitrary value of $100 equals 0.1GAL</p>
         <div className="mb-3">
-          <label className="mb-3">Claims:</label>
-          <div>
-            <input
-              type="checkbox"
-              name="cropDamage"
-              checked={claims.cropDamage}
-              onChange={handleCheckboxChange}
-            />
-            <label>Crop Damage</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="fire"
-              checked={claims.fire}
-              onChange={handleCheckboxChange}
-            />
-            <label>Fire</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="flooding"
-              checked={claims.flooding}
-              onChange={handleCheckboxChange}
-            />
-            <label>Flooding</label>
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              name="disease"
-              checked={claims.disease}
-              onChange={handleCheckboxChange}
-            />
-            <label>Disease</label>
+          <label className="text-large font-bold mb-1">Overview of transaction</label>
+          <p className="text-gray-500 text-sm mb-3">{`Insurance premium for ${formatDate(new Date())}`}</p>
+          <div className="flex flex-col justify-center items-center">
+            <p className="text-2xl font-bold">${value}</p>
+            <p className="text-gray-500 text-sm mb-3">{`~ ${value * 0.001}GAL`}</p>
           </div>
         </div>
-        <div className="mb-3">
-          <label>Date of event:</label>
-          <p>Warning! Latest API data might not be available yet</p>
-          <DatePicker
-            onChange={onChange}
-            value={value}
-            endDate={formatDateTime(new Date(), true)}
-            maxDate={new Date()}
-            isClearable={true}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label>Explanation:</label>
-          <textarea
-            value={explanation}
-            onChange={(e) => setExplanation(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Submit Claim</button>
+        <button type="submit" disabled={loading}>{loading ? <Loading /> : "Pay premium"}</button>
       </form>
     </div>
   );

@@ -60,9 +60,6 @@ export default function LeafletMap(props: any) {
         />
       </FeatureGroup>
       <Marker position={position}>
-        <Popup>
-          A pretty CSS3 popup. <br /> Easily customizable.
-        </Popup>
       </Marker>
     </MapContainer>
   );

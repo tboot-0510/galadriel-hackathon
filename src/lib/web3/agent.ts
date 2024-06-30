@@ -1,9 +1,26 @@
+import { ABI } from "@/abis/agent";
+import { Wallet } from "ethers";
 import { Contract, ethers, TransactionReceipt } from "ethers";
 
 interface Message {
   role: string;
   content: string;
 }
+
+export const getProvider = () => {
+  return new ethers.JsonRpcProvider(process.env.RPC_URL);
+};
+export const getWallet = () => {
+  const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+  const privateKey = process.env.PRIVATE_KEY_GALADRIEL;
+  const wallet = new Wallet(privateKey, provider);
+  return wallet;
+};
+
+export const getContract = () => {
+  const wallet = getWallet();
+  return new Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS, ABI, wallet);
+};
 
 export async function getNewMessages(
   contract: Contract,

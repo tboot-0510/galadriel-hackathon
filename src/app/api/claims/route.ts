@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     data: {
       userId: user.id,
       description: explanation,
-      transactionHash: tx,
+      tx,
     },
   });
 
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const body = await request.json();
 
-  const { id, transactionHash, runId, account } = body;
+  const { id, tx, runId, account } = body;
 
   if (!id) {
     return Response.json({ message: "Claim ID is required" }, { status: 400 });
@@ -96,7 +96,7 @@ export async function PATCH(request: Request) {
       id: id,
     },
     data: {
-      transactionHash,
+      tx,
       runId,
     },
   });
