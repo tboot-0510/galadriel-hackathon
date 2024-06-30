@@ -67,6 +67,7 @@ export default function ClaimMessage({ tx }: any) {
                 signer
             );
             const receipt = await ethersProvider.getTransactionReceipt(tx);
+            console.log("claim receipt", receipt);
             if (!receipt) {
               timeoutId = setTimeout(pollTransactionReceipt, 2000);
             return;

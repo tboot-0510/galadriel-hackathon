@@ -71,7 +71,7 @@ export function getPremiumFormattedData(
 
   return {
     monthly: user?.estimatedPremium || estimatedPremium,
-    daily: getPremiumOfTheDay.value,
+    daily: getPremiumOfTheDay?.value,
     prevDay: firstPremium ? null : getPremiumDayBefore.value,
   };
 }
