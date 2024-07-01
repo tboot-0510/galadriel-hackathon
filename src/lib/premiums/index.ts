@@ -68,11 +68,18 @@ export function getPremiumFormattedData(
     (premium: any) => premium.dateOfDeposit === getUnixTimestamp(new Date())
   )?.[0];
 
-  const firstPremium = premiums.length === 1;
+  const firstPremium = premiums.length === 1 && getPremiumOfTheDay;
 
   return {
     monthly: user?.estimatedPremium || estimatedPremium,
-    daily: getPremiumOfTheDay?.value,
+    daily:
+      getPremiumOfTheDay?.value ||
+      Number(
+        (
+          Math.round(user?.estimatedPremium || estimatedPremium) /
+          getDaysInMonth()
+        ).toFixed(2)
+      ), // this should be the forecasted premium from the day before
     prevDay: firstPremium ? null : getPremiumDayBefore.value,
   };
 }
