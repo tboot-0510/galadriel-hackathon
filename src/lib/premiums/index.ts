@@ -47,6 +47,7 @@ export function getPremiumFormattedData(
 ) {
   const estimatedPremium = estimatePremium(chartData.datasets);
   const { premiums } = premiumsData;
+
   if (premiums.length === 0) {
     return {
       monthly: user?.estimatedPremium || estimatedPremium,

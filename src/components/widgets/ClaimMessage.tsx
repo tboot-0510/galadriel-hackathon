@@ -27,10 +27,12 @@ export default function ClaimMessage({ tx }: any) {
           try {
             let newMessages = await getNewMessages(contract, agentRunId, messages.length);
             newMessages = newMessages.filter((msg) => msg.role === "assistant");
+            console.log("newMessages", newMessages);
             if (newMessages && newMessages.length > 0) {
                 setLoading(false);
                 try {
-                  const {analysis, conclusion} = JSON.parse(newMessages[0].content);
+                  const m = newMessages[0].content.replace('```json', "").replace('```', "");
+                  const {analysis, conclusion} = JSON.parse(m);
                   messages.push(...newMessages);
                   setAllMessages([{content: analysis.concat(conclusion)}]);
                   setConclusion(conclusion);
@@ -46,6 +48,7 @@ export default function ClaimMessage({ tx }: any) {
       
             if (exitNextLoop || await contract.isRunFinished(agentRunId)) {
               console.log(`Agent run ID ${agentRunId} finished!`);
+              setLoading(false);
               router.refresh();
               break;
             }
